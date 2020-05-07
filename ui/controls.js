@@ -630,6 +630,15 @@ shaka.ui.Controls.prototype.hideSettingsMenus = function() {
   this.hideSettingsMenusTimer_.tickNow();
 };
 
+/**
+ * @export
+ */
+shaka.ui.Controls.prototype.updateShowHoverControls = function() {
+  this.showOnHoverControls_ = Array.from(
+    this.videoContainer_.getElementsByClassName(
+        'shaka-show-controls-on-mouse-over'));
+};
+
 
 /**
  * @private
@@ -660,9 +669,7 @@ shaka.ui.Controls.prototype.createDOM_ = function() {
     }
   }
 
-  this.showOnHoverControls_ = Array.from(
-      this.videoContainer_.getElementsByClassName(
-          'shaka-show-controls-on-mouse-over'));
+  this.updateShowHoverControls();
 };
 
 
