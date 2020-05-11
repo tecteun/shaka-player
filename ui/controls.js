@@ -639,6 +639,16 @@ shaka.ui.Controls.prototype.updateShowHoverControls = function() {
         'shaka-show-controls-on-mouse-over'));
 };
 
+/**
+ * @param {boolean} active
+ * Manually trigger the overlay to be active
+ * @export
+ */
+shaka.ui.Controls.prototype.setControlsActive = function(active) {
+  if (this.video_) {
+    this.computeOpacity(active);
+  }
+};
 
 /**
  * @private
@@ -982,9 +992,10 @@ shaka.ui.Controls.prototype.isHovered_ = function() {
 
 
 /**
+ * @param {boolean=} show
  * Recompute whether the controls should be shown or hidden.
  */
-shaka.ui.Controls.prototype.computeOpacity = function() {
+shaka.ui.Controls.prototype.computeOpacity = function(show) {
   const videoIsPaused = this.video_.paused && !this.isSeeking_;
   const keyboardNavigationMode = this.controlsContainer_.classList.contains(
     'shaka-keyboard-navigation');
@@ -992,7 +1003,8 @@ shaka.ui.Controls.prototype.computeOpacity = function() {
   // Keep showing the controls if the video is paused, there has been recent
   // mouse movement, we're in keyboard navigation, or one of a special class of
   // elements is hovered.
-  if (videoIsPaused ||
+  if (show ||
+      videoIsPaused ||
       this.recentMouseMovement_ ||
       keyboardNavigationMode ||
       this.isHovered_()) {
