@@ -82,6 +82,9 @@ shaka.ui.Controls = function(player, videoContainer, video, config, castProxy) {
   /** @private {boolean} */
   this.isSeeking_ = false;
 
+  /** @private {boolean} */
+  this.isLocked_ = false;
+
   /** @private {!Array.<!Element>} */
   this.settingsMenus_ = [];
 
@@ -651,6 +654,17 @@ shaka.ui.Controls.prototype.setControlsActive = function(active) {
 };
 
 /**
+ * @param {boolean} locked
+ * Disable UI updates
+ * @export
+ */
+shaka.ui.Controls.prototype.lockUI = function(locked) {
+  if (this.video_) {
+    this.isLocked_ = locked;
+  }
+};
+
+/**
  * @private
  */
 shaka.ui.Controls.prototype.createDOM_ = function() {
@@ -1212,7 +1226,7 @@ shaka.ui.Controls.prototype.seek_ = function(currentTime, event) {
  * @private
  */
 shaka.ui.Controls.prototype.updateTimeAndSeekRange_ = function() {
-  if (this.seekBar_) {
+  if (this.seekBar_ && !this.isLocked_) {
     this.seekBar_.setValue(this.video_.currentTime);
     this.seekBar_.update();
     if (this.seekBar_.isShowing()) {
