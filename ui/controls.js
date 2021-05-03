@@ -665,6 +665,14 @@ shaka.ui.Controls.prototype.lockUI = function(locked) {
 };
 
 /**
+ * @return {boolean}
+ * @export
+ */
+ shaka.ui.Controls.prototype.getIsLocked = function() {
+  return this.isLocked_;
+};
+
+/**
  * @private
  */
 shaka.ui.Controls.prototype.createDOM_ = function() {
