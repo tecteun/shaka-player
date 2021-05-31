@@ -16,14 +16,14 @@
  */
 
 
-goog.provide('shaka.ui.PipButton');
+ goog.provide('shaka.ui.PipButton');
 
-goog.require('shaka.ui.Element');
-goog.require('shaka.ui.Locales');
-goog.require('shaka.ui.Localization');
-goog.require('shaka.ui.OverflowMenu');
-goog.require('shaka.ui.Utils');
-goog.require('shaka.util.Dom');
+ goog.require('shaka.ui.Element');
+ goog.require('shaka.ui.Locales');
+ goog.require('shaka.ui.Localization');
+ goog.require('shaka.ui.OverflowMenu');
+ goog.require('shaka.ui.Utils');
+ goog.require('shaka.util.Dom');
 
 
 /**
@@ -55,6 +55,7 @@ shaka.ui.PipButton = class extends shaka.ui.Element {
 
     const label = shaka.util.Dom.createHTMLElement('label');
     label.classList.add('shaka-overflow-button-label');
+    label.classList.add('shaka-overflow-menu-only');
     this.pipNameSpan_ = shaka.util.Dom.createHTMLElement('span');
     this.pipNameSpan_.textContent =
       this.localization.resolve(LocIds.PICTURE_IN_PICTURE);
@@ -79,14 +80,14 @@ shaka.ui.PipButton = class extends shaka.ui.Element {
     }
 
     this.eventManager.listen(
-      this.localization, shaka.ui.Localization.LOCALE_UPDATED, () => {
-        this.updateLocalizedStrings_();
-      });
+        this.localization, shaka.ui.Localization.LOCALE_UPDATED, () => {
+          this.updateLocalizedStrings_();
+        });
 
     this.eventManager.listen(
-      this.localization, shaka.ui.Localization.LOCALE_CHANGED, () => {
-        this.updateLocalizedStrings_();
-      });
+        this.localization, shaka.ui.Localization.LOCALE_CHANGED, () => {
+          this.updateLocalizedStrings_();
+        });
 
     this.eventManager.listen(this.pipButton_, 'click', () => {
       this.onPipClick_();
@@ -241,4 +242,7 @@ shaka.ui.PipButton.Factory = class {
 };
 
 shaka.ui.OverflowMenu.registerElement(
-  'picture_in_picture', new shaka.ui.PipButton.Factory());
+    'picture_in_picture', new shaka.ui.PipButton.Factory());
+
+shaka.ui.Controls.registerElement(
+    'picture_in_picture', new shaka.ui.PipButton.Factory());
