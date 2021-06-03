@@ -41,8 +41,9 @@ shaka.ui.Controls = class extends shaka.util.FakeEventTarget {
    * @param {!HTMLElement} videoContainer
    * @param {!HTMLMediaElement} video
    * @param {shaka.extern.UIConfiguration} config
+   * @param {shaka.extern.CastProxy=} castProxy
    */
-  constructor(player, videoContainer, video, config) {
+  constructor(player, videoContainer, video, config, castProxy) {
     super();
 
     /** @private {boolean} */
@@ -51,21 +52,21 @@ shaka.ui.Controls = class extends shaka.util.FakeEventTarget {
     /** @private {shaka.extern.UIConfiguration} */
     this.config_ = config;
 
-    /** @private {shaka.cast.CastProxy} */
-    this.castProxy_ = new shaka.cast.CastProxy(
-        video, player, this.config_.castReceiverAppId);
+    /** @private {shaka.extern.CastProxy} */
+    this.castProxy_ = castProxy || /** @type {shaka.extern.CastProxy} */ (new shaka.cast.CastProxy(
+        video, player, this.config_.castReceiverAppId));
 
     /** @private {boolean} */
     this.castAllowed_ = true;
 
     /** @private {HTMLMediaElement} */
-    this.video_ = this.castProxy_.getVideo();
+    this.video_ = this.castProxy_['getVideo']();
 
     /** @private {HTMLMediaElement} */
     this.localVideo_ = video;
 
-    /** @private {shaka.Player} */
-    this.player_ = this.castProxy_.getPlayer();
+    /** @private {shaka.Player|shaka.extern.Player} */
+    this.player_ = this.castProxy_['getPlayer']();
 
     /** @private {shaka.Player} */
     this.localPlayer_ = player;
@@ -84,6 +85,9 @@ shaka.ui.Controls = class extends shaka.util.FakeEventTarget {
 
     /** @private {boolean} */
     this.isSeeking_ = false;
+
+    /** @private {boolean} */
+    this.isLocked_ = false;
 
     /** @private {!Array.<!HTMLElement>} */
     this.menus_ = [];
@@ -234,7 +238,7 @@ shaka.ui.Controls = class extends shaka.util.FakeEventTarget {
     }
 
     if (this.castProxy_) {
-      await this.castProxy_.destroy();
+      await this.castProxy_['destroy']();
       this.castProxy_ = null;
     }
 
@@ -308,7 +312,7 @@ shaka.ui.Controls = class extends shaka.util.FakeEventTarget {
   configure(config) {
     this.config_ = config;
 
-    this.castProxy_.changeReceiverId(config.castReceiverAppId);
+    this.castProxy_['changeReceiverId'](config.castReceiverAppId);
 
     // Deconstruct the old layout if applicable
     if (this.seekBar_) {
@@ -401,7 +405,7 @@ shaka.ui.Controls = class extends shaka.util.FakeEventTarget {
 
   /**
    * @export
-   * @return {shaka.cast.CastProxy}
+   * @return {shaka.extern.CastProxy|shaka.cast.CastProxy}
    */
   getCastProxy() {
     return this.castProxy_;
@@ -440,7 +444,7 @@ shaka.ui.Controls = class extends shaka.util.FakeEventTarget {
   }
 
   /**
-   * @return {shaka.Player}
+   * @return {shaka.Player|shaka.extern.Player}
    * @export
    */
   getPlayer() {
@@ -542,6 +546,45 @@ shaka.ui.Controls = class extends shaka.util.FakeEventTarget {
   /** @export */
   hideSettingsMenus() {
     this.hideSettingsMenusTimer_.tickNow();
+  }
+
+  /**
+   * @export
+   */
+  updateShowHoverControls() {
+    this.showOnHoverControls_ = Array.from(
+        this.videoContainer_.getElementsByClassName(
+            'shaka-show-controls-on-mouse-over'));
+  }
+
+  /**
+   * @param {boolean} active
+   * Manually trigger the overlay to be active
+   * @export
+   */
+  setControlsActive(active) {
+    if (this.video_) {
+      this.computeOpacity(active);
+    }
+  }
+
+  /**
+   * @param {boolean} locked
+   * Disable UI updates
+   * @export
+   */
+  lockUI(locked) {
+    if (this.video_) {
+      this.isLocked_ = locked;
+    }
+  }
+
+  /**
+   * @return {boolean}
+   * @export
+   */
+  getIsLocked() {
+    return this.isLocked_;
   }
 
   /** @export */
@@ -679,11 +722,15 @@ shaka.ui.Controls = class extends shaka.util.FakeEventTarget {
     this.videoContainer_.setAttribute('shaka-controls', 'true');
 
     this.eventManager_.listen(this.controlsContainer_, 'touchstart', (e) => {
-      this.onContainerTouch_(e);
+      if (!e.defaultPrevented) {
+        this.onContainerTouch_(e);
+      }
     }, {passive: false});
 
-    this.eventManager_.listen(this.controlsContainer_, 'click', () => {
-      this.onContainerClick_();
+    this.eventManager_.listen(this.controlsContainer_, 'click', (e) => {
+      if (!e.defaultPrevented) {
+        this.onContainerClick_();
+      }
     });
 
     this.eventManager_.listen(this.controlsContainer_, 'dblclick', () => {
@@ -963,7 +1010,7 @@ shaka.ui.Controls = class extends shaka.util.FakeEventTarget {
   async onScreenRotation_() {
     if (!this.video_ ||
         this.video_.readyState == 0 ||
-        this.castProxy_.isCasting() ||
+        this.castProxy_['isCasting']() ||
         !this.config_.enableFullscreenOnRotation) { return; }
 
     if (screen.orientation.type.includes('landscape') &&
@@ -1086,8 +1133,9 @@ shaka.ui.Controls = class extends shaka.util.FakeEventTarget {
 
   /**
    * Recompute whether the controls should be shown or hidden.
+   * @param {boolean=} show
    */
-  computeOpacity() {
+  computeOpacity(show) {
     const adIsPaused = this.ad_ ? this.ad_.isPaused() : false;
     const videoIsPaused = this.video_.paused && !this.isSeeking_;
     const keyboardNavigationMode = this.controlsContainer_.classList.contains(
@@ -1096,7 +1144,7 @@ shaka.ui.Controls = class extends shaka.util.FakeEventTarget {
     // Keep showing the controls if the ad or video is paused, there has been
     // recent mouse movement, we're in keyboard navigation, or one of a special
     // class of elements is hovered.
-    if (adIsPaused ||
+    if (show || adIsPaused ||
         (!this.ad_ && videoIsPaused) ||
         this.recentMouseMovement_ ||
         keyboardNavigationMode ||
@@ -1157,7 +1205,7 @@ shaka.ui.Controls = class extends shaka.util.FakeEventTarget {
 
   /** @private */
   onCastStatusChange_() {
-    const isCasting = this.castProxy_.isCasting();
+    const isCasting = this.castProxy_['isCasting']();
     this.dispatchEvent(new shaka.util.FakeEvent('caststatuschanged', {
       newStatus: isCasting,
     }));
@@ -1292,7 +1340,7 @@ shaka.ui.Controls = class extends shaka.util.FakeEventTarget {
    * @private
    */
   updateTimeAndSeekRange_() {
-    if (this.seekBar_) {
+    if (this.seekBar_ && !this.isLocked_) {
       this.seekBar_.setValue(this.video_.currentTime);
       this.seekBar_.update();
 

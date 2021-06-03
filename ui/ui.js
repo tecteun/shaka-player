@@ -19,6 +19,7 @@ goog.require('shaka.util.Dom');
 goog.require('shaka.util.FakeEvent');
 goog.require('shaka.util.IDestroyable');
 goog.require('shaka.util.Platform');
+goog.require('shaka.cast.CastProxy');
 
 /**
  * @implements {shaka.util.IDestroyable}
@@ -29,8 +30,9 @@ shaka.ui.Overlay = class {
    * @param {!shaka.Player} player
    * @param {!HTMLElement} videoContainer
    * @param {!HTMLMediaElement} video
+   * @param {shaka.cast.CastProxy=} castProxy
    */
-  constructor(player, videoContainer, video) {
+  constructor(player, videoContainer, video, castProxy) {
     /** @private {shaka.Player} */
     this.player_ = player;
 
@@ -49,7 +51,7 @@ shaka.ui.Overlay = class {
 
     /** @private {shaka.ui.Controls} */
     this.controls_ = new shaka.ui.Controls(
-        player, videoContainer, video, this.config_);
+        player, videoContainer, video, this.config_, castProxy);
 
     // Run the initial setup so that no configure() call is required for default
     // settings.
