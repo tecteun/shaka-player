@@ -60,6 +60,7 @@ module.exports = {
     'no-eval': 'off',
     'no-undef': 'off',
     'valid-jsdoc': 'off',
+    'max-len': 'off',
     // }}}
 
     // Things we should probably fix, but in stages in multiple commits: {{{
