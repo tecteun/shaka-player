@@ -20,7 +20,6 @@ shaka.extern = {};
  * @struct
  * @implements {shaka.util.IDestroyable}
  * @extends {shaka.util.FakeEventTarget}
- * @export
  *
  */
 shaka.extern.Player = class {
@@ -131,6 +130,31 @@ shaka.extern.Player = class {
   getVariantTracks() {}
 
   /**
+   * @return {shaka.net.NetworkingEngine} A reference to the Player's networking
+   *     engine.  Applications may use this to make requests through Shaka's
+   *     networking plugins.
+   */
+  getNetworkingEngine() {}
+
+  /**
+   * Enable trick play to skip through content without playing by repeatedly
+   * seeking. For example, a rate of 2.5 would result in 2.5 seconds of content
+   * being skipped every second. A negative rate will result in moving
+   * backwards.
+   *
+   * <p>
+   * If the player has not loaded content or is still loading content this will
+   * be a no-op. Wait until <code>load</code> has completed before calling.
+   *
+   * <p>
+   * Trick play will be canceled automatically if the playhead hits the
+   * beginning or end of the seekable range for the content.
+   *
+   * @param {number} rate
+   */
+  trickPlay(rate) {}
+
+  /**
    * Check if the manifest contains only audio-only content. If the player has not
    * loaded content, this will return |false|.
    *
@@ -149,7 +173,6 @@ shaka.extern.Player = class {
    *
    * If the player has not loaded content, this will return an empty list.
    *
-   * @export
    */
   getTextTracks() {}
 
@@ -189,7 +212,6 @@ shaka.extern.Player = class {
    * Ad Insertion functionality.
    *
    * @return {shaka.extern.IAdManager}
-   * @export
    */
   getAdManager() {}
 };

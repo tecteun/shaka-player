@@ -1,3 +1,6 @@
+/**
+ * @externs
+ */
 
 /**
  * @interface
